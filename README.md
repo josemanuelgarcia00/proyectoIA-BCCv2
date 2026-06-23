@@ -2,36 +2,36 @@
 
 Sistema web de resolución de conflictos entre iteraciones de datos del perímetro. Permite seleccionar y aplicar cambios sobre la primera iteración en función de lo que venga en las siguientes.
 
-Esta versión es una **prueba de migración**: ya no tiene backend (FastAPI/Render). Todo (lógica de negocio + interfaz) es un único sitio estático en `frontend/`, desplegable desde GitHub Pages, que lee (y, cuando se reactive el login, escribe) un **Google Sheet directamente desde el navegador**.
+Esta versión es una **prueba de migración**: ya no tiene backend (FastAPI/Render) ni login. Todo (lógica de negocio + interfaz) es un único sitio estático en `frontend/`, desplegable desde GitHub Pages, que **lee** un Google Sheet directamente desde el navegador con una API key pública de solo lectura.
 
-> ⚠️ **Estado actual: modo solo lectura, sin login.** El login con Google (OAuth) está desactivado de momento (ver `App.jsx`): la app lee el Sheet con una **API key pública de solo lectura** y los cambios (resolver conflictos, aceptar, guardar...) no se persisten — la interfaz funciona en memoria para poder probarla, pero no escribe nada en el Sheet hasta que se reactive el login. Ver la sección "Modo solo lectura" más abajo.
+> ⚠️ **Solo lectura, sin login, por diseño.** Sin login no hay forma segura de escribir en el Sheet desde un sitio estático público: cualquier credencial de escritura embebida en el código del navegador sería visible para cualquiera. Por eso resolver conflictos, aceptar, etc. funcionan en memoria para poder explorar la interfaz, pero **no se guarda nada** en el Sheet ni en `Auditoria` — al recargar la página se pierde. El botón "Guardar en Google Sheets" lo indica explícitamente.
 
 ## 🎯 Características
 
 - **Motor de Resolución de Conflictos**: compara automáticamente iteraciones múltiples (ahora en JavaScript, en `frontend/src/domain/conflictResolver.js`)
 - **Interfaz Web**: React + Vite, en `frontend/`
 - **Lógica de Cascada**: reglas para resolver conflictos contra el Diccionario o la iteración anterior
-- **Sin servidor propio**: la fuente de datos es un Google Sheet, accedido vía la REST API de Google Sheets con el token OAuth del usuario (Google Identity Services)
+- **Sin servidor propio ni login**: la fuente de datos es un Google Sheet, accedido vía la REST API de Google Sheets con una API key pública de solo lectura
 - **Log de auditoría**: cada decisión se registra en la hoja `Auditoria` del Sheet, y se reproduce al recargar para no perder revisiones en curso
 
 ## 🏗️ Arquitectura
 
 ```
 Google Sheet (Diccionario, Perímetro, Desechados, Perímetro_Historico, Auditoria)
-  ↕ (REST API v4 de Sheets, con el token OAuth del usuario)
-frontend/src/google/        → autenticación (auth.js) y llamadas a la API (sheetsApi.js)
-frontend/src/storage/       → parseo de filas y lectura/escritura de hojas
+  ↕ (REST API v4 de Sheets, solo lectura, con API key pública)
+frontend/src/google/        → llamadas a la API de Sheets (sheetsApi.js)
+frontend/src/storage/       → parseo de filas y lectura de hojas
 frontend/src/domain/        → entidades y motor de resolución de conflictos
 frontend/src/repository/    → caché en memoria del catálogo + replay del log de auditoría
 frontend/src/services/      → orquestación de alto nivel sobre el repositorio
 frontend/src/api/           → capa fina que devuelve los datos ya listos para la interfaz
-frontend/src/contexts/      → AuthContext (sesión Google) y CatalogContext (estado de catálogo/vista), consumidos vía useAuth()/useCatalog()
+frontend/src/contexts/      → CatalogContext (estado de catálogo/vista), consumido vía useCatalog()
 frontend/src/components/    → interfaz (IterationReview, DictionaryEntry, RejectedEntry, SaveSelector)
 ```
 
 No hay CORS que configurar ni servidor que desplegar: todo vive en `frontend/` y se publica como sitio estático.
 
-## 🚀 Puesta en marcha (modo solo lectura, sin login)
+## 🚀 Puesta en marcha
 
 ### 1. Crear una API key en Google Cloud Console
 
@@ -63,16 +63,6 @@ La aplicación estará disponible en `http://localhost:5173/prueba/` (ajusta `ba
 4. Ajusta `base` en `frontend/vite.config.js` al nombre real del repo (`/<nombre-del-repo>/`).
 5. Cada push a `main`/`develop` dispara `.github/workflows/deploy.yml`, que compila `frontend/` y publica `frontend/dist` en GitHub Pages.
 
-## 🔒 Modo solo lectura (sin login) vs. con login
-
-Por defecto la app **no pide iniciar sesión**: lee el Sheet con la API key (paso 1) y todo lo demás (resolver conflictos, aceptar, rechazar...) funciona en memoria, pero **nada se guarda** en el Sheet ni en la hoja `Auditoria` — al recargar la página se pierde lo hecho en esa sesión. El botón "Guardar en Google Sheets" mostrará un aviso pidiendo iniciar sesión.
-
-Para reactivar el login con Google (necesario para que los cambios se guarden de verdad):
-
-1. Sigue los pasos de creación del **OAuth Client ID** (Google Cloud Console → Credenciales → Crear credenciales → ID de cliente de OAuth → "Aplicación web", con `http://localhost:5173` y tu URL de GitHub Pages en "Authorized JavaScript origins") y rellena `VITE_GOOGLE_CLIENT_ID` en `.env`.
-2. Comparte el Sheet como **Editor** (no solo "puede ver") con cada cuenta que vaya a usar la app.
-3. En `frontend/src/App.jsx`, envuelve `<CatalogProvider>` con `<AuthProvider>` (de `./contexts/AuthContext`) y vuelve a gatear el render con `useAuth().signedIn` (tal y como está comentado en ese archivo) — `google/sheetsApi.js` ya da preferencia al token OAuth en cuanto detecta una sesión iniciada, sin más cambios.
-
 ## 🔌 Hojas del Google Sheet
 
 | Hoja | Uso |
@@ -102,11 +92,8 @@ Revisa que la API key es correcta, que la **Google Sheets API** está habilitada
 ### No carga nada y no hay error visible
 Abre la consola del navegador: errores de lectura (Sheet no compartido como público, ID incorrecto, hojas con otro nombre...) se registran ahí sin romper la interfaz, mostrando simplemente "vacío".
 
-### "Inicia sesión con Google para guardar cambios..."
-Esperado en el modo solo lectura actual: el botón "Guardar en Google Sheets" requiere el login OAuth (ver "Modo solo lectura (sin login) vs. con login" más arriba).
-
-### "El Sheet debe ser público para verlo sin iniciar sesión"
-Comparte el Sheet como "Cualquiera con el enlace puede ver", o reactiva el login (ver más arriba) si prefieres mantenerlo privado.
+### "Esta app no tiene login: no se pueden guardar cambios..."
+Esperado: esta versión es solo lectura por diseño (ver el aviso al principio de este README).
 
 ## 🤝 Contribuciones
 

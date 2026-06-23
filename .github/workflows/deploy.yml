@@ -36,12 +36,9 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Modo solo lectura actual (sin login, ver README "Modo solo lectura
-          # (sin login) vs. con login"). VITE_GOOGLE_CLIENT_ID se deja
-          # preparado para cuando se reactive el login con Google.
+          # Sin login: lectura del Sheet con una API key pública (ver README).
           VITE_GOOGLE_SHEET_ID: ${{ vars.VITE_GOOGLE_SHEET_ID }}
           VITE_GOOGLE_API_KEY: ${{ vars.VITE_GOOGLE_API_KEY }}
-          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

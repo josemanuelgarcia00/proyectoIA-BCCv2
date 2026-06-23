@@ -6,11 +6,8 @@ import SaveSelector from './components/SaveSelector';
 import { CatalogProvider, useCatalog } from './contexts/CatalogContext';
 import './index.css';
 
-// LOGIN DESACTIVADO DE MOMENTO: se lee el Sheet con VITE_GOOGLE_API_KEY (solo
-// lectura, ver google/sheetsApi.js), sin pasar por <AuthProvider>/<LoginGate>.
-// Para reactivar el login con Google: envolver <CatalogProvider> con
-// <AuthProvider> (contexts/AuthContext.jsx) y volver a gatear el render con
-// useAuth().signedIn, como antes.
+// Sin login: se lee el Sheet con VITE_GOOGLE_API_KEY (solo lectura, ver
+// google/sheetsApi.js).
 
 function CatalogView() {
   const {

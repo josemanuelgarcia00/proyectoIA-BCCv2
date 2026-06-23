@@ -6,8 +6,8 @@ import SaveSelector from './components/SaveSelector';
 import { CatalogProvider, useCatalog } from './contexts/CatalogContext';
 import './index.css';
 
-// Sin login: se lee el Sheet con VITE_GOOGLE_API_KEY (solo lectura, ver
-// google/sheetsApi.js).
+// Sin login: se lee el Sheet a través del Google Apps Script publicado
+// (VITE_APPS_SCRIPT_URL, solo lectura, ver google/sheetsApi.js).
 
 function CatalogView() {
   const {
@@ -31,9 +31,6 @@ function CatalogView() {
         <span className="eyebrow">Cajamar · Registro de servicios</span>
         <h1>Gestor de Conflictos de Servicios</h1>
         <p>Concilia el Perímetro frente al Diccionario y resuelve cada conflicto sin perder datos</p>
-        <p style={{ marginTop: '10px', fontSize: '12.5px', color: 'rgba(255,255,255,0.85)' }}>
-          ⚠️ Modo solo lectura (sin login): los cambios no se guardan en el Sheet.
-        </p>
         <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
           <button className="btn-header" onClick={loadConflicts}>Revisar servicios</button>
           <button className="btn-header" onClick={loadDictionary}>Ver diccionario completo</button>

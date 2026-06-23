@@ -36,9 +36,10 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Sin login: lectura del Sheet con una API key pública (ver README).
+          # Sin login: lectura del Sheet vía el Google Apps Script publicado
+          # (ver apps-script/Code.gs y el README).
           VITE_GOOGLE_SHEET_ID: ${{ vars.VITE_GOOGLE_SHEET_ID }}
-          VITE_GOOGLE_API_KEY: ${{ vars.VITE_GOOGLE_API_KEY }}
+          VITE_APPS_SCRIPT_URL: ${{ vars.VITE_APPS_SCRIPT_URL }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

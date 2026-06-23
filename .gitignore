@@ -1,0 +1,32 @@
+# ==========================================
+# Node / Frontend (ver también frontend/.gitignore)
+# ==========================================
+node_modules/
+dist/
+build/
+
+# ==========================================
+# Configuración de Editores de Código (IDE)
+# ==========================================
+.vscode/
+.idea/
+
+# ==========================================
+# Archivos del Sistema Operativo
+# ==========================================
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Logs y cachés varios
+# ==========================================
+*.log
+
+# ==========================================
+# Herramientas de agentes/IA (Claude Code, etc.)
+# ==========================================
+.agents/
+.claude/
+CLAUDE.md
+graphify-out/
+skills-lock.json
